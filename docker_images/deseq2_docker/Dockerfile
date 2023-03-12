@@ -15,6 +15,7 @@ RUN apt-get update && \
 
 # Install all software under /opt/software:
 RUN mkdir -p /opt/software 
+RUN mkdir -p /opt/software/scripts
 
 # Get the miniconda installer script and run it in silent mode:
 RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /opt/software/miniconda.sh && \
@@ -22,7 +23,7 @@ RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -
 ENV PATH="/opt/software/miniconda/bin:${PATH}"
 
 # Install DESeq2 and dependencies:
-ADD normalize.R /opt/software/
+ADD deseq2.R /opt/software/scripts/
 ADD environment.yml /opt/software/
 
 # Build the deseq2 environment based on the yml file
