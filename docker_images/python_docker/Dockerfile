@@ -25,6 +25,9 @@ ADD requirements.txt /opt/software/
 ADD segment_expressions.py /opt/software/scripts/
 ADD extract_tcga_type.py /opt/software/scripts/
 
+# Install python deps
+RUN pip3 install -r /opt/software/requirements.txt
+
 # Install the NetZoo python library
 RUN wget https://github.com/netZoo/netZooPy/archive/refs/tags/0.9.14.tar.gz \
     -P /opt/software && \

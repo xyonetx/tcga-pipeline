@@ -24,6 +24,11 @@ import java.text.SimpleDateFormat
 // unless specified, skip help message
 params.help = false
 
+// remove genes with cohort-wise means lower than this threshold:
+// (where cohort is the subset of samples AFTER subsetting for our
+// high and low expressed gene of interest)
+params.min_reads = 5
+
 /*
     END default params:
 */
@@ -100,6 +105,73 @@ process run_dge {
 }
 
 
+process run_gsea {
+
+    tag "Run GSEA on tcga type: $params.tcga_type"
+    publishDir "${output_dir}/${params.tcga_type}/gsea", mode:"copy"
+    container "blawney/gsea"
+    cpus 4
+    memory '8 GB'
+
+    input:
+        path(norm_counts)
+        path(annotations)
+
+    output:
+        path("${gct_file}")
+        path("${cls_file}")
+        path("${params.tcga_type}.gsea_results.zip")
+
+    script:
+        def gct_file_template = "%s.%s_%s_%s.high_vs_low.gct"
+        def cls_file_template = "%s.%s_%s_%s.high_vs_low.cls"
+        gct_file = String.format(gct_file_template, params.tcga_type, params.gene, params.low_q, params.high_q)
+        cls_file = String.format(cls_file_template, params.tcga_type, params.gene, params.low_q, params.high_q)
+        """
+        /usr/bin/python3 /opt/software/scripts/prep_files.py \
+            -f ${norm_counts} \
+            -a ${annotations} \
+            -g ${gct_file} \
+            -c ${cls_file} \
+            -t ${params.min_reads}
+
+        /opt/software/gsea/GSEA_4.3.2/gsea-cli.sh GSEA \
+            -res "${gct_file}" \
+            -cls "${cls_file}#high_versus_low" \
+            -gmx ftp.broadinstitute.org://pub/gsea/msigdb/human/gene_sets/h.all.v2023.1.Hs.symbols.gmt \
+            -chip ftp.broadinstitute.org://pub/gsea/msigdb/human/annotations/Human_Ensembl_Gene_ID_MSigDB.v2023.1.Hs.chip \
+            -out /gsea/ \
+            -rpt_label "${params.tcga_type}" \
+            -zip_report true \
+            -collapse Collapse \
+            -mode Max_probe \
+            -norm meandiv \
+            -nperm 1000 \
+            -permute phenotype \
+            -rnd_seed timestamp \
+            -rnd_type no_balance \
+            -scoring_scheme weighted \
+            -metric Signal2Noise \
+            -sort real \
+            -order descending \
+            -create_gcts false \
+            -create_svgs false \
+            -include_only_symbols true \
+            -make_sets true \
+            -median false \
+            -num 100 \
+            -plot_top_x 20 \
+            -save_rnd_lists false \
+            -set_max 500 \
+            -set_min 15
+
+        /usr/bin/python3 /opt/software/scripts/move_final_files.py \
+            -p "/gsea/${params.tcga_type}*/*.zip" \
+            -o ${params.tcga_type}.gsea_results.zip
+        """
+}
+
+
 workflow {
 
     if (params.help){
@@ -109,5 +181,6 @@ workflow {
 
     raw_count_ch= extract_tcga_type(params.hdf5)
     (dge_results_ch, norm_counts_ch, ann_ch) = run_dge(raw_count_ch)
+    run_gsea(norm_counts_ch, ann_ch)
 
 }
