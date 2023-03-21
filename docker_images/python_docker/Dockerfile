@@ -22,8 +22,8 @@ RUN wget https://granddb.s3.amazonaws.com/optPANDA/motifs/regMatQval005.csv -O /
 
 # Add the various python requirements and script files
 ADD requirements.txt /opt/software/
-ADD segment_expressions.py /opt/software/scripts/
 ADD extract_tcga_type.py /opt/software/scripts/
+ADD run_lioness.py /opt/software/scripts/
 
 # Install python deps
 RUN pip3 install -r /opt/software/requirements.txt
