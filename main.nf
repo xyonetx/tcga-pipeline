@@ -172,6 +172,28 @@ process run_gsea {
 }
 
 
+process map_ensg_to_symbol {
+    tag "Run ENSG to symbol gene mapping $exp_mtx"
+    publishDir "${output_dir}/${params.tcga_type}/normalized_counts", mode:"copy"
+    container "docker.io/blawney/pandas"
+    cpus 2
+    memory '4 GB'
+
+    input:
+        path(exp_mtx)
+
+    output:
+        path("${params.tcga_type}.deseq2_norm_counts.symbol_remapped.all.tsv")
+
+    script:
+        """
+        /usr/bin/python3 /opt/software/scripts/map_ensg_to_symbol.py \
+            -i ${exp_mtx} \
+            -m /opt/software/resources/Human_Ensembl_Gene_ID_MSigDB.v2023.1.Hs.chip \
+            -o ${params.tcga_type}.deseq2_norm_counts.symbol_remapped.all.tsv
+        """
+}
+
 workflow {
 
     if (params.help){
@@ -182,5 +204,6 @@ workflow {
     raw_count_ch= extract_tcga_type(params.hdf5)
     (dge_results_ch, norm_counts_ch, ann_ch) = run_dge(raw_count_ch)
     run_gsea(norm_counts_ch, ann_ch)
+    norm_counts_symbol_remapped_ch = map_ensg_to_symbol(norm_counts_ch)
 
 }
