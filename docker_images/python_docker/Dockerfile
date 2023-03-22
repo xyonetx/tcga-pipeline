@@ -6,6 +6,7 @@ RUN apt-get update && \
     apt-get install -y \
     build-essential \
     git \
+    curl \
     python3 \
     python3-pip
 
@@ -30,7 +31,6 @@ ADD map_ensg_to_symbol.py /opt/software/scripts/
 RUN pip3 install -r /opt/software/requirements.txt
 
 # Install the NetZoo python library
-RUN wget https://github.com/netZoo/netZooPy/archive/refs/tags/0.9.14.tar.gz \
-    -P /opt/software && \
-    tar xzvf /opt/software/0.9.14.tar.gz -C /opt/software && \
+RUN cd /opt/software && \
+    curl -sL https://github.com/netZoo/netZooPy/archive/refs/tags/0.9.14.tar.gz | tar -xz && \
     pip3 install -e /opt/software/netZooPy-0.9.14/
