@@ -1,9 +1,14 @@
+params.exp_mtx = 's3://xyone-demo-data/exp_with_header.tsv'
+params.motifs = 's3://xyone-demo-data/motifs.txt'
+params.ppi = 's3://xyone-demo-data/ppi.txt'
+params.output_dir = 's3://xyone-batch-results'
+
 process run_lioness {
     tag "Run LIONESS expression on $exp_mtx"
     publishDir "${params.output_dir}/lioness", mode:"copy"
-    container "blawney/pandas"
+    container "docker.io/blawney/pandas"
     cpus 4
-    memory '8 GB'
+    memory '12 GB'
 
     input:
         path(exp_mtx)
@@ -12,7 +17,7 @@ process run_lioness {
 
     output:
         path("lioness_output/*.csv")
-
+        path("merged.tsv")
     script:
         """
         /usr/bin/python3 /opt/software/scripts/run_lioness.py \
@@ -20,13 +25,17 @@ process run_lioness {
             -m ${motifs} \
             -p ${ppi} \
             -n ${task.cpus}
+
+        /usr/bin/python3 /opt/software/scripts/merge_lioness.py \
+           -d lioness_output \
+           -o merged.tsv
         """
 }
 
 
 workflow {
-    exp_mtx_ch = Channel.fromPath('/Users/brianlawney/fpt/muc1_updated/toydata/exp_mtx_with_header.tsv')
-    motifs_ch = Channel.fromPath('/Users/brianlawney/fpt/muc1_updated/toydata/motifs.txt')
-    ppi_ch = Channel.fromPath('/Users/brianlawney/fpt/muc1_updated/toydata/ppi.txt')
+    exp_mtx_ch = Channel.fromPath(params.exp_mtx)
+    motifs_ch = Channel.fromPath(params.motifs)
+    ppi_ch = Channel.fromPath(params.ppi)
     run_lioness(exp_mtx_ch, motifs_ch, ppi_ch)
 }
