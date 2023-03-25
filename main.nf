@@ -194,6 +194,44 @@ process map_ensg_to_symbol {
         """
 }
 
+
+process run_lioness {
+    tag "Run LIONESS expression on $exp_mtx"
+    publishDir "${params.output_dir}/lioness", mode:"copy"
+    container "docker.io/blawney/pandas"
+    cpus 16
+    memory '64 GB'
+
+    input:
+        path(exp_mtx)
+        path(ann)
+
+    output:
+        path("lioness_output/*.csv")
+        path("${gene_file}")
+        path("${tf_file}")
+
+    script:
+        def tf_weights_file_template = "%s.%s_%s_%s.lioness_weights.tf.merged.tsv"
+        def gene_weights_file_template = "%s.%s_%s_%s.lioness_weights.genes.merged.tsv"
+        tf_file = String.format(tf_weights_file_template, params.tcga_type, params.gene, params.low_q, params.high_q)
+        gene_file = String.format(gene_weights_file_template, params.tcga_type, params.gene, params.low_q, params.high_q)
+        """
+        /usr/bin/python3 /opt/software/scripts/run_lioness.py \
+            -i ${exp_mtx} \
+            -m /opt/software/resources/tissues_ppi.tsv \
+            -p /opt/software/resources/tissues_motif.tsv \
+            -a ${ann} \
+            -n ${task.cpus}
+
+        /usr/bin/python3 /opt/software/scripts/merge_lioness.py \
+           -d lioness_output \
+           -g ${gene_fiile} \
+           -t ${tf_file}
+        """
+}
+
+
 workflow {
 
     if (params.help){
@@ -205,5 +243,6 @@ workflow {
     (dge_results_ch, norm_counts_ch, ann_ch) = run_dge(raw_count_ch)
     run_gsea(norm_counts_ch, ann_ch)
     norm_counts_symbol_remapped_ch = map_ensg_to_symbol(norm_counts_ch)
+    run_lioness(norm_counts_symbol_remapped_ch, ann_ch)
 
 }
