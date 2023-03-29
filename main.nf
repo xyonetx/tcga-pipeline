@@ -54,7 +54,7 @@ process extract_tcga_type {
 
     tag "Extract tcga type: $params.tcga_type"
     publishDir "${output_dir}/${params.tcga_type}/raw_counts", mode:"copy"
-    container "blawney/pandas"
+    container "ghcr.io/xyonetx/tcga-pipeline/pandas"
     cpus 4
     memory '8 GB'
 
@@ -79,7 +79,7 @@ process run_dge {
     publishDir "${output_dir}/${params.tcga_type}/normalized_counts", mode:"copy", pattern: "*.deseq2_norm_counts.all.tsv"
     publishDir "${output_dir}/${params.tcga_type}/dge_results", mode:"copy", pattern: "*.deseq2_results*"
     publishDir "${output_dir}/${params.tcga_type}/annotations", mode:"copy", pattern: "*.annotations*"
-    container "blawney/deseq2"
+    container "ghcr.io/xyonetx/tcga-pipeline/deseq2"
     cpus 4
     memory '8 GB'
 
@@ -109,7 +109,7 @@ process run_gsea {
 
     tag "Run GSEA on tcga type: $params.tcga_type"
     publishDir "${output_dir}/${params.tcga_type}/gsea", mode:"copy"
-    container "blawney/gsea"
+    container "ghcr.io/xyonetx/tcga-pipeline/gsea"
     cpus 4
     memory '8 GB'
 
@@ -175,7 +175,7 @@ process run_gsea {
 process map_ensg_to_symbol {
     tag "Run ENSG to symbol gene mapping $exp_mtx"
     publishDir "${output_dir}/${params.tcga_type}/normalized_counts", mode:"copy"
-    container "docker.io/blawney/pandas"
+    container "ghcr.io/xyonetx/tcga-pipeline/pandas"
     cpus 2
     memory '4 GB'
 
@@ -198,7 +198,7 @@ process map_ensg_to_symbol {
 process run_lioness {
     tag "Run LIONESS expression on $exp_mtx"
     publishDir "${params.output_dir}/lioness", mode:"copy"
-    container "docker.io/blawney/pandas"
+    container "ghcr.io/xyonetx/tcga-pipeline/pandas"
     cpus 16
     memory '64 GB'
 
