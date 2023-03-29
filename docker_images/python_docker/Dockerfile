@@ -18,7 +18,7 @@ RUN mkdir -p /opt/software/scripts
 
 # Download the prior files into this Docker image:
 RUN curl https://granddb.s3.amazonaws.com/optPANDA/ppi/ppi_complete.txt -o /opt/software/resources/tissues_ppi.tsv
-RUN curl https://granddb.s3.amazonaws.com/optPANDA/motifs/regMatQval005.csv -o /opt/software/resources/tissues_motif.tsv
+RUN curl https://granddb.s3.amazonaws.com/optPANDA/motifs/Hugo_motifCellLine.txt -o /opt/software/resources/tissues_motif.tsv
 RUN curl ftp://ftp.broadinstitute.org://pub/gsea/msigdb/human/annotations/Human_Ensembl_Gene_ID_MSigDB.v2023.1.Hs.chip -o /opt/software/resources/Human_Ensembl_Gene_ID_MSigDB.v2023.1.Hs.chip
 
 # Add the various python requirements and script files

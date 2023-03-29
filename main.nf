@@ -219,14 +219,14 @@ process run_lioness {
         """
         /usr/bin/python3 /opt/software/scripts/run_lioness.py \
             -i ${exp_mtx} \
-            -m /opt/software/resources/tissues_ppi.tsv \
-            -p /opt/software/resources/tissues_motif.tsv \
+            -p /opt/software/resources/tissues_ppi.tsv \
+            -m /opt/software/resources/tissues_motif.tsv \
             -a ${ann} \
             -n ${task.cpus}
 
         /usr/bin/python3 /opt/software/scripts/merge_lioness.py \
            -d lioness_output \
-           -g ${gene_fiile} \
+           -g ${gene_file} \
            -t ${tf_file}
         """
 }
