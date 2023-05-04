@@ -27,6 +27,7 @@ ADD extract_tcga_type.py /opt/software/scripts/
 ADD run_lioness.py /opt/software/scripts/
 ADD map_ensg_to_symbol.py /opt/software/scripts/
 ADD merge_lioness.py /opt/software/scripts/
+ADD expression_filter.py /opt/software/scripts/
 
 # Install python deps
 RUN pip3 install -r /opt/software/requirements.txt

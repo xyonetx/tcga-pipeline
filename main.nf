@@ -199,8 +199,8 @@ process run_lioness {
     tag "Run LIONESS expression on $exp_mtx"
     publishDir "${params.output_dir}/lioness", mode:"copy"
     container "ghcr.io/xyonetx/tcga-pipeline/pandas"
-    cpus 16
-    memory '64 GB'
+    cpus 30
+    memory '128 GB'
 
     input:
         path(exp_mtx)
@@ -232,6 +232,29 @@ process run_lioness {
 }
 
 
+process filter_matrix {
+    tag "Filter for top expressed genes in $exp_mtx"
+    publishDir "${params.output_dir}/expression_filter", mode:"copy"
+    container "ghcr.io/xyonetx/tcga-pipeline/pandas"
+    cpus 2
+    memory '8 GB'
+
+    input:
+        path(exp_mtx)
+
+    output:
+        path("${params.tcga_type}.deseq2_norm_counts.symbol_remapped.top_n_filtered.${params.num_genes}.tsv")
+
+    script:
+        """
+        /usr/bin/python3 /opt/software/scripts/expression_filter.py \
+           -i ${exp_mtx} \
+           -o ${params.tcga_type}.deseq2_norm_counts.symbol_remapped.top_n_filtered.${params.num_genes}.tsv \
+           -n ${params.num_genes}
+        """
+}
+
+
 workflow {
 
     if (params.help){
@@ -243,6 +266,7 @@ workflow {
     (dge_results_ch, norm_counts_ch, ann_ch) = run_dge(raw_count_ch)
     run_gsea(norm_counts_ch, ann_ch)
     norm_counts_symbol_remapped_ch = map_ensg_to_symbol(norm_counts_ch)
-    run_lioness(norm_counts_symbol_remapped_ch, ann_ch)
+    filtered_norm_counts_ch = filter_matrix(norm_counts_symbol_remapped_ch)
+    run_lioness(filtered_norm_counts_ch, ann_ch)
 
 }
