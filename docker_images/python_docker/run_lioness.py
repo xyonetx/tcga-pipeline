@@ -35,11 +35,14 @@ if __name__ == '__main__':
     exp_mtx = pd.read_table(args.input_matrix, index_col=0)
     idx = np.where([x in samples for x in exp_mtx.columns])[0]
     
+    # tmp-- to check memory
+    idx = idx.tolist()[:10]
+
     panda_obj = load_panda_obj(args.panda_pickle)
 
     Lioness(panda_obj,
             ncores=args.num_cores,
             save_single=True,
             ignore_final=True,
-            subset_numbers=idx.tolist(),
+            subset_numbers=idx,
             save_fmt='csv')
