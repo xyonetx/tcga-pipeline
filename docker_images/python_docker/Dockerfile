@@ -24,6 +24,7 @@ RUN curl ftp://ftp.broadinstitute.org://pub/gsea/msigdb/human/annotations/Human_
 # Add the various python requirements and script files
 ADD requirements.txt /opt/software/
 ADD extract_tcga_type.py /opt/software/scripts/
+ADD run_panda.py /opt/software/scripts/
 ADD run_lioness.py /opt/software/scripts/
 ADD map_ensg_to_symbol.py /opt/software/scripts/
 ADD merge_lioness.py /opt/software/scripts/

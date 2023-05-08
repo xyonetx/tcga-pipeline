@@ -199,8 +199,8 @@ process run_lioness {
     tag "Run LIONESS expression on $exp_mtx"
     publishDir "${params.output_dir}/lioness", mode:"copy"
     container "ghcr.io/xyonetx/tcga-pipeline/pandas"
-    cpus 30
-    memory '128 GB'
+    cpus 16
+    memory '96 GB'
 
     input:
         path(exp_mtx)
@@ -217,11 +217,19 @@ process run_lioness {
         tf_file = String.format(tf_weights_file_template, params.tcga_type, params.gene, params.low_q, params.high_q)
         gene_file = String.format(gene_weights_file_template, params.tcga_type, params.gene, params.low_q, params.high_q)
         """
+        /usr/bin/python3 /opt/software/scripts/run_panda.py \
+            -i ${exp_mtx} \
+            -p /opt/software/resources/tissues_ppi.tsv \
+            -m /opt/software/resources/tissues_motif.tsv \
+            -a ${ann} \
+            -o panda.pkl
+
         /usr/bin/python3 /opt/software/scripts/run_lioness.py \
             -i ${exp_mtx} \
             -p /opt/software/resources/tissues_ppi.tsv \
             -m /opt/software/resources/tissues_motif.tsv \
             -a ${ann} \
+            -k panda.pkl \
             -n ${task.cpus}
 
         /usr/bin/python3 /opt/software/scripts/merge_lioness.py \

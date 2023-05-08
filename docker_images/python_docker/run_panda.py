@@ -4,7 +4,7 @@ import pickle
 
 import pandas as pd
 import numpy as np
-from netZooPy.lioness.lioness import Lioness
+from netZooPy.panda.panda import Panda
 
 
 def parse_args():
@@ -12,16 +12,9 @@ def parse_args():
     parser.add_argument('-i', '--input', dest='input_matrix')
     parser.add_argument('-m', '--motif', dest='motifs')
     parser.add_argument('-p', '--ppi', dest='ppi')
-    parser.add_argument('-n', '--num_cores', dest='num_cores')
     parser.add_argument('-a', '--ann', dest='annotations')
-    parser.add_argument('-k', '--pickle', dest='panda_pickle')
+    parser.add_argument('-o', '--output', dest='output_pickle')
     return parser.parse_args()
-
-
-def load_panda_obj(pickle_name):
-    with open(pickle_name, 'rb') as f:
-        panda_obj = pickle.load(f)
-        return panda_obj
 
 
 if __name__ == '__main__':
@@ -35,11 +28,13 @@ if __name__ == '__main__':
     exp_mtx = pd.read_table(args.input_matrix, index_col=0)
     idx = np.where([x in samples for x in exp_mtx.columns])[0]
     
-    panda_obj = load_panda_obj(args.panda_pickle)
+    panda_obj = Panda(args.input_matrix,
+                args.motifs,
+                args.ppi,
+                keep_expression_matrix=True,
+                with_header=True,
+                save_memory=False)
 
-    Lioness(panda_obj,
-            ncores=args.num_cores,
-            save_single=True,
-            ignore_final=True,
-            subset_numbers=idx.tolist(),
-            save_fmt='csv')
+    # Save PANDA object as pickle
+    with open(args.output_pickle, "wb") as f:
+        pickle.dump(panda_obj, f)
