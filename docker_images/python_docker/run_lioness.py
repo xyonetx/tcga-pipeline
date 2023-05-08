@@ -41,6 +41,6 @@ if __name__ == '__main__':
             ncores=args.num_cores,
             save_single=True,
             ignore_final=True,
-            subset_numbers=idx,
+            subset_numbers=idx.tolist(),
             precision='single',
             save_fmt='csv')
