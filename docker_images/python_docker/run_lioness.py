@@ -9,12 +9,13 @@ from netZooPy.lioness.lioness import Lioness
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--input', dest='input_matrix')
+    parser.add_argument('-i', '--index', dest='index')
+    parser.add_argument('-k', '--input_pkl', dest='input_pkl')
     parser.add_argument('-m', '--motif', dest='motifs')
     parser.add_argument('-p', '--ppi', dest='ppi')
     parser.add_argument('-n', '--num_cores', dest='num_cores')
     parser.add_argument('-a', '--ann', dest='annotations')
-    parser.add_argument('-k', '--pickle', dest='panda_pickle')
+    parser.add_argument('-o', '--output', dest='output')
     return parser.parse_args()
 
 
@@ -27,20 +28,25 @@ def load_panda_obj(pickle_name):
 if __name__ == '__main__':
     args = parse_args()
 
+    panda_obj = load_panda_obj(args.input_pkl)
+
+    # read the split file (which simply contains an integer
+    # indicating the split index) and parse as an integer:
+    idx = int(open(args.index).read().strip())
+
+    # parse the annotation file and subset to keep only those
+    # samples in the current shard:
     ann_df = pd.read_table(args.annotations, index_col=0)
-    samples = ann_df.index.values.tolist()
+    ann_df = ann_df.loc[ann_df.split_id == idx]
 
-    # need to convert the sample names to their integer locations (columns) 
-    # in the expression matrix we are going to feed to PANDA
-    exp_mtx = pd.read_table(args.input_matrix, index_col=0)
-    idx = np.where([x in samples for x in exp_mtx.columns])[0]
+    selected_samples = ann_df.index
 
-    panda_obj = load_panda_obj(args.panda_pickle)
+    exp_samples = panda_obj.expression_samples
+    locations = [exp_samples.get_loc(k) for k in selected_samples]
+
+    output_file = f'{args.output}.{idx}.csv'
 
     Lioness(panda_obj,
             ncores=args.num_cores,
-            save_single=True,
-            ignore_final=True,
-            subset_numbers=idx.tolist(),
-            precision='single',
-            save_fmt='csv')
+            subset_numbers=locations,
+            export_filename=output_file)
