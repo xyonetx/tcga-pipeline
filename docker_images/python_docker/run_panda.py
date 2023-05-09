@@ -32,6 +32,7 @@ if __name__ == '__main__':
                 args.motifs,
                 args.ppi,
                 keep_expression_matrix=True,
+                modeProcess='legacy',
                 with_header=True,
                 save_memory=False)
 
