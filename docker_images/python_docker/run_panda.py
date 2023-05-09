@@ -33,6 +33,7 @@ if __name__ == '__main__':
                 args.ppi,
                 keep_expression_matrix=True,
                 modeProcess='legacy',
+                remove_missing=True,
                 with_header=True,
                 save_memory=False)
 
