@@ -36,6 +36,7 @@ ADD extract_tcga_type.py /opt/software/scripts/
 ADD run_panda.py /opt/software/scripts/
 ADD run_lioness.py /opt/software/scripts/
 ADD map_ensg_to_symbol.py /opt/software/scripts/
-ADD merge_lioness.py /opt/software/scripts/
 ADD expression_filter.py /opt/software/scripts/
 ADD determine_lioness_splits.py /opt/software/scripts/
+ADD merge_slices.py /opt/software/scripts/
+ADD lioness_stats.py /opt/software/scripts/
