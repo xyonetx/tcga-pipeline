@@ -19,6 +19,7 @@ RUN mkdir -p /opt/software && \
 ADD requirements.txt /opt/software/
 ADD prep_files.py /opt/software/scripts/
 ADD move_final_files.py /opt/software/scripts/
+ADD create_rnk_file.py /opt/software/scripts/
 ADD GSEA_4.3.2.zip /opt/software/gsea/
 
 RUN unzip /opt/software/gsea/GSEA_4.3.2.zip -d /opt/software/gsea
