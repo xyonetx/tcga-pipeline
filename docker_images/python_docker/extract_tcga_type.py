@@ -26,12 +26,13 @@ def subset_hdf5(input_hdf5, tcga_type):
     Returns a pandas dataframe
     '''
     tcga_type = tcga_type.replace('-', '_').lower()
-    group_id = f'{tcga_type}/ds'
+    group_id = f'/{tcga_type}/ds'
     with pd.HDFStore(input_hdf5, 'r') as fin:
         try:
             return fin.get(group_id)
         except KeyError as ex:
             sys.stderr.write(f'Cannot find key {ex}')
+            sys.stderr.write(f'Keys are: {fin.keys()}')
             sys.exit(1)
 
 
