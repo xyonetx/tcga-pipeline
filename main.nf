@@ -187,10 +187,6 @@ process run_gsea_preranked {
         path("${params.tcga_type}.${params.gene}_${params.low_q}_${params.high_q}.gsea_preranked_results.zip")
 
     script:
-        def gct_file_template = "%s.%s_%s_%s.high_vs_low.gct"
-        def cls_file_template = "%s.%s_%s_%s.high_vs_low.cls"
-        gct_file = String.format(gct_file_template, params.tcga_type, params.gene, params.low_q, params.high_q)
-        cls_file = String.format(cls_file_template, params.tcga_type, params.gene, params.low_q, params.high_q)
         """
         /usr/bin/python3 /opt/software/scripts/create_rnk_file.py \
             -f ${dge_results} \
@@ -200,7 +196,7 @@ process run_gsea_preranked {
             -gmx ftp.broadinstitute.org://pub/gsea/msigdb/human/gene_sets/h.all.v2023.1.Hs.symbols.gmt \
             -chip ftp.broadinstitute.org://pub/gsea/msigdb/human/annotations/Human_Ensembl_Gene_ID_MSigDB.v2023.1.Hs.chip \
             -rnk ${params.tcga_type}.${params.gene}_${params.low_q}_${params.high_q}.rnk \
-            -collapse Remap_Only \
+            -collapse Collapse \
             -mode Abs_max_of_probes \
             -norm meandiv \
             -nperm 1000 \
@@ -214,10 +210,12 @@ process run_gsea_preranked {
             -set_max 500 \
             -set_min 15 \
             -zip_report true \
-            -out /gsea_preanked/
+            -out /gsea_preranked/
 
+        ls /gsea_preranked/*/*.zip
+        echo "******************"
         /usr/bin/python3 /opt/software/scripts/move_final_files.py \
-            -p "/gsea_preranked/${params.tcga_type}*/*.zip" \
+            -p "/gsea_preranked/*/*.zip" \
             -o ${params.tcga_type}.${params.gene}_${params.low_q}_${params.high_q}.gsea_preranked_results.zip
         """
 }
@@ -363,14 +361,14 @@ process merge_lioness_slices {
     tag "Merge lioness slices"
     publishDir "${output_dir}/${params.tcga_type}/lioness_merged", mode:"copy"
     container "ghcr.io/xyonetx/tcga-pipeline/pandas"
-    cpus 4
-    memory '24 GB'
+    cpus 12
+    memory '96 GB'
 
     input:
         path 'slice??.csv'
 
     output:
-        path("${params.tcga_type}.lioness_merged.csv")
+        path("${params.tcga_type}.${params.gene}_${params.low_q}_${params.high_q}.lioness_merged.csv")
 
     script:
         """
@@ -385,15 +383,15 @@ process lioness_edge_stats {
     tag "Lioness edge stats"
     publishDir "${output_dir}/${params.tcga_type}/lioness_stats", mode:"copy"
     container "ghcr.io/xyonetx/tcga-pipeline/pandas"
-    cpus 4
-    memory '64 GB'
+    cpus 16
+    memory '256 GB'
 
     input:
         path(edge_weights)
         path(ann)
 
     output:
-        path("${params.tcga_type}.lioness_stats.csv")
+        path("${params.tcga_type}.${params.gene}_${params.low_q}_${params.high_q}.lioness_stats.csv")
 
     script:
         """
@@ -416,7 +414,7 @@ workflow {
     (dge_results_ch, norm_counts_ch, ann_ch) = run_dge(raw_count_ch)
     run_gsea(norm_counts_ch, ann_ch)
     run_gsea_preranked(dge_results_ch)
-    (norm_counts_symbol_remapped_ch, dge_results_remapped_ch) = map_ensg_to_symbol(norm_counts_ch)
+    (norm_counts_symbol_remapped_ch, dge_results_remapped_ch) = map_ensg_to_symbol(norm_counts_ch, dge_results_ch)
     filtered_norm_counts_ch = filter_matrix(norm_counts_symbol_remapped_ch)
 
     panda_pkl_ch = run_panda(filtered_norm_counts_ch, ann_ch)
