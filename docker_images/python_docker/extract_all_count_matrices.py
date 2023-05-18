@@ -38,7 +38,7 @@ def subset_hdf5(input_hdf5, tcga_type):
 
 if __name__ == '__main__':
     args = parse_cl_args()
-    annotations = pd.read_table(args.annotations, index_col=0)
+    annotations = pd.read_csv(args.annotations, index_col=0, low_memory=False)
     tcga_types = annotations.project_id.unique()
     for tcga_type in tcga_types:
         df = subset_hdf5(args.input_hdf5, tcga_type)
