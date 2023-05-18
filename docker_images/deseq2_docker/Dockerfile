@@ -24,6 +24,7 @@ ENV PATH="/opt/software/miniconda/bin:${PATH}"
 
 # Install DESeq2 and dependencies:
 ADD deseq2.R /opt/software/scripts/
+ADD normalize_and_segregate /opt/software/scripts/
 ADD environment.yml /opt/software/
 
 # Build the deseq2 environment based on the yml file

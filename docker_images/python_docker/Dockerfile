@@ -40,3 +40,4 @@ ADD expression_filter.py /opt/software/scripts/
 ADD determine_lioness_splits.py /opt/software/scripts/
 ADD merge_slices.py /opt/software/scripts/
 ADD lioness_stats.py /opt/software/scripts/
+ADD extract_all_count_matrices.py /opt/software/scripts/
