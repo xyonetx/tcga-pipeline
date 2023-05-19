@@ -23,6 +23,9 @@ HIGH_Q <- as.numeric(args[5])
 # on the distribution
 ANN_OUTPUT <- args[6]
 
+# file name for normalized counts
+NORM_COUNTS_OUTPUT <- args[7]
+
 ###########################################################################
 
 # Don't mangle the column names quite yet. Keep them as-is and then we can convert them after we
@@ -90,3 +93,7 @@ rownames(joined_ann) <- colname_mapping[joined_ann[,'Row.names']]
 joined_ann <- subset(joined_ann, select=c('days_to_death','vital_status','expression_state'))
 
 write.table(joined_ann, ANN_OUTPUT, sep='\t', quote=F)
+
+# write normalized counts
+colnames(norm_mtx)<-colname_mapping[colnames(norm_mtx)]
+write.table(norm_mtx, NORM_COUNTS_OUTPUT, sep='\t', quote=F)

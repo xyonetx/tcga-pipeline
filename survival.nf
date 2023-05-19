@@ -53,7 +53,8 @@ process extract_count_matrices {
 process segregate_by_expression {
 
     tag "Segregate expression on $raw_counts"
-    publishDir "${output_dir}/annotations", mode:"copy"
+    publishDir "${output_dir}/annotations", mode:"copy", pattern: "*annotations*"
+    publishDir "${output_dir}/normalized_counts", mode:"copy", pattern: "*.norm_counts.tsv"
     container "ghcr.io/xyonetx/tcga-pipeline/deseq2"
     cpus 4
     memory '14 GB'
@@ -64,6 +65,7 @@ process segregate_by_expression {
 
     output:
         path("${tcga_type}.annotations.${params.gene}_${params.low_q}_${params.high_q}.tsv")
+        path("${tcga_type}.norm_counts.tsv")
 
     script:
         tcga_type = raw_counts.name.split('\\.')[0]
@@ -75,7 +77,8 @@ process segregate_by_expression {
             ${params.gene} \
             ${params.low_q} \
             ${params.high_q} \
-            ${tcga_type}.annotations.${params.gene}_${params.low_q}_${params.high_q}.tsv
+            ${tcga_type}.annotations.${params.gene}_${params.low_q}_${params.high_q}.tsv \
+            ${tcga_type}.norm_counts.tsv
         """
 }
 
@@ -85,7 +88,6 @@ process calculate_individual_survival {
     container "ghcr.io/xyonetx/tcga-pipeline/pandas"
     cpus 1
     memory '4 GB'
-    executor 'local'
 
     input:
         path(ann)
@@ -105,7 +107,6 @@ process calculate_overall_survival {
     container "ghcr.io/xyonetx/tcga-pipeline/pandas"
     cpus 1
     memory '4 GB'
-    executor 'local'
 
     input:
         path 'ann??.tsv'
@@ -119,9 +120,32 @@ process calculate_overall_survival {
         """
 }
 
+process plot_individual_count_distribution {
+    tag "Plot count distribution for individual type"
+    publishDir "${output_dir}/distribution_plots", mode:"copy"
+    container "ghcr.io/xyonetx/tcga-pipeline/pandas"
+    cpus 1
+    memory '2 GB'
+
+    input:
+        path(nc)
+
+    output:
+        path('nc*.png')
+
+    script:
+        """
+        /usr/bin/python3 /opt/software/scripts/plot_count_distribution.py \
+            -i ${nc} \
+            -g ${params.gene}
+        """
+}
 
 workflow {
     raw_counts_ch = extract_count_matrices(params.hdf5, params.full_annotations).flatten()
-    subtype_ann_ch = segregate_by_expression(raw_counts_ch, params.full_annotations).collect()
-    calculate_survival(subtype_ann_ch)
+    subtype_ann_ch, nc_ch = segregate_by_expression(raw_counts_ch, params.full_annotations)
+    calculate_individual_survival(subtype_ann_ch)
+    merged_ann_ch = subtype_ann_ch.collect()
+    calculate_overall_survival(merged_ann_ch)
+    plot_individual_count_distribution(nc_ch)
 }
