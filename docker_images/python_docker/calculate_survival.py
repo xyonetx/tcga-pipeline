@@ -14,7 +14,6 @@ def parse_args():
     return parser.parse_args()
 
 
-
 def make_kaplan_meier_plot(ann, tcga_type):
     '''
     Create a survival plot for the two cohorts and
@@ -51,11 +50,14 @@ def make_kaplan_meier_plot(ann, tcga_type):
     
 if __name__ == '__main__':
     args = parse_args()
-    total_ann = pd.DataFrame()
-    for ann_file in args.annotations:
+    if len(args.annotations) > 1:
+        total_ann = pd.DataFrame()
+        for ann_file in args.annotations:
+            ann_df = pd.read_table(ann_file, index_col=0)
+            total_ann = pd.concat([total_ann, ann_df], axis=0)
+        make_kaplan_meier_plot(total_ann, 'Overall')
+    else:
+        ann_file = args.annotations[0]
         ann_df = pd.read_table(ann_file, index_col=0)
         tcga_type = os.path.basename(ann_file.split('.')[0])
         make_kaplan_meier_plot(ann_df, tcga_type)
-        total_ann = pd.concat([total_ann, ann_df], axis=0)
-    
-    make_kaplan_meier_plot(total_ann, 'Overall')

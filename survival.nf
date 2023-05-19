@@ -31,7 +31,7 @@ process extract_count_matrices {
     publishDir "${output_dir}/raw_counts", mode:"copy"
     container "ghcr.io/xyonetx/tcga-pipeline/pandas"
     cpus 2
-    memory '8 GB'
+    memory '7 GB'
 
     input:
         path(hdf5)
@@ -56,7 +56,7 @@ process segregate_by_expression {
     publishDir "${output_dir}/annotations", mode:"copy"
     container "ghcr.io/xyonetx/tcga-pipeline/deseq2"
     cpus 4
-    memory '12 GB'
+    memory '14 GB'
 
     input:
         path(raw_counts)
@@ -79,29 +79,48 @@ process segregate_by_expression {
         """
 }
 
-process calculate_survival {
-    tag "Calculate Kaplan-Meier estimates"
+process calculate_individual_survival {
+    tag "Calculate Kaplan-Meier estimates for individual type"
     publishDir "${output_dir}/kaplan_meier", mode:"copy"
     container "ghcr.io/xyonetx/tcga-pipeline/pandas"
-    cpus 2
-    memory '8 GB'
+    cpus 1
+    memory '4 GB'
+    executor 'local'
+
+    input:
+        path(ann)
+
+    output:
+        path('kaplan_meier.*.png')
+
+    script:
+        """
+        /usr/bin/python3 /opt/software/scripts/calculate_survival.py ${ann}
+        """
+}
+
+process calculate_overall_survival {
+    tag "Calculate Kaplan-Meier estimates for entire cohort"
+    publishDir "${output_dir}/kaplan_meier", mode:"copy"
+    container "ghcr.io/xyonetx/tcga-pipeline/pandas"
+    cpus 1
+    memory '4 GB'
+    executor 'local'
 
     input:
         path 'ann??.tsv'
 
     output:
-        path("kaplan_meier.*.png")
+        path('kaplan_meier.*.png')
 
     script:
         """
-        /usr/bin/python3 /opt/software/scripts/calculate_survival.py \         
-            ann*.tsv
+        /usr/bin/python3 /opt/software/scripts/calculate_survival.py ann*.tsv
         """
 }
 
 
 workflow {
-
     raw_counts_ch = extract_count_matrices(params.hdf5, params.full_annotations).flatten()
     subtype_ann_ch = segregate_by_expression(raw_counts_ch, params.full_annotations).collect()
     calculate_survival(subtype_ann_ch)
