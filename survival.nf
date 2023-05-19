@@ -30,8 +30,8 @@ process extract_count_matrices {
     tag "Extract count matrices"
     publishDir "${output_dir}/raw_counts", mode:"copy"
     container "ghcr.io/xyonetx/tcga-pipeline/pandas"
-    cpus 1
-    memory '4 GB'
+    cpus 2
+    memory '8 GB'
 
     input:
         path(hdf5)
@@ -55,8 +55,8 @@ process segregate_by_expression {
     tag "Segregate expression on $raw_counts"
     publishDir "${output_dir}/annotations", mode:"copy"
     container "ghcr.io/xyonetx/tcga-pipeline/deseq2"
-    cpus 1
-    memory '4 GB'
+    cpus 4
+    memory '12 GB'
 
     input:
         path(raw_counts)
@@ -66,7 +66,7 @@ process segregate_by_expression {
         path("${tcga_type}.annotations.${params.gene}_${params.low_q}_${params.high_q}.tsv")
 
     script:
-        def tcga_type = input_file.name.split('\\.')[0]
+        tcga_type = raw_counts.name.split('\\.')[0]
         """
         /opt/software/miniconda/envs/deseq2/bin/Rscript \
             /opt/software/scripts/normalize_and_segregate.R \
@@ -79,11 +79,30 @@ process segregate_by_expression {
         """
 }
 
+process calculate_survival {
+    tag "Calculate Kaplan-Meier estimates"
+    publishDir "${output_dir}/kaplan_meier", mode:"copy"
+    container "ghcr.io/xyonetx/tcga-pipeline/pandas"
+    cpus 2
+    memory '8 GB'
+
+    input:
+        path 'ann??.tsv'
+
+    output:
+        path("kaplan_meier.*.png")
+
+    script:
+        """
+        /usr/bin/python3 /opt/software/scripts/calculate_survival.py \         
+            ann*.tsv
+        """
+}
+
 
 workflow {
 
     raw_counts_ch = extract_count_matrices(params.hdf5, params.full_annotations).flatten()
-    subtype_ann_ch = segregate_by_expression(raw_counts_ch, params.full_annotations)
-    subtype_ann_ch.view()
-
+    subtype_ann_ch = segregate_by_expression(raw_counts_ch, params.full_annotations).collect()
+    calculate_survival(subtype_ann_ch)
 }
