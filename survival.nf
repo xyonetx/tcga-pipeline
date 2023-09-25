@@ -143,7 +143,7 @@ process plot_individual_count_distribution {
 
 workflow {
     raw_counts_ch = extract_count_matrices(params.hdf5, params.full_annotations).flatten()
-    subtype_ann_ch, nc_ch = segregate_by_expression(raw_counts_ch, params.full_annotations)
+    (subtype_ann_ch, nc_ch) = segregate_by_expression(raw_counts_ch, params.full_annotations)
     calculate_individual_survival(subtype_ann_ch)
     merged_ann_ch = subtype_ann_ch.collect()
     calculate_overall_survival(merged_ann_ch)
