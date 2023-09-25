@@ -43,3 +43,4 @@ ADD lioness_stats.py /opt/software/scripts/
 ADD extract_all_count_matrices.py /opt/software/scripts/
 ADD calculate_survival.py /opt/software/scripts/
 ADD plot_count_distribution.py /opt/software/scripts/
+ADD lioness_gene_target_scores.py /opt/software/scripts/
