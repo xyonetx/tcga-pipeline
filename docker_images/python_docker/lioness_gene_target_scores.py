@@ -1,6 +1,7 @@
 import argparse
 
 import pandas as pd
+import numpy as np
 from scipy.stats import mannwhitneyu
 
 
@@ -34,7 +35,13 @@ if __name__ == "__main__":
     low_df = ts_df[low_samples]
 
     u, pvals = mannwhitneyu(low_df, high_df, axis=1)
-    result = pd.DataFrame(pvals, index=ts_df.index)
+    result = pd.DataFrame(pvals, index=ts_df.index, columns=['pval'])
+
+    high_df_means = high_df.mean(axis=1)
+    low_df_means = low_df.mean(axis=1)
+    ratio = high_df_means/low_df_means
+    signs = np.sign(np.log(ratio))
+    result['rnk'] = -np.log(result['pval'])*signs
 
     ts_df.to_csv(args.scores_output, sep='\t')
-    result.to_csv(args.testing_output, sep='\t')
+    result['rnk'].sort_values(ascending=False).to_csv(args.testing_output, sep='\t', header=False)
