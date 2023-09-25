@@ -7,7 +7,8 @@ from scipy.stats import mannwhitneyu
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', dest='input')
-    parser.add_argument('-o', '--output', dest='output')
+    parser.add_argument('-t', '--testout', dest='testing_output')
+    parser.add_argument('-s', '--scoreout', dest='scores_output')
     parser.add_argument('-a', '--ann', dest='annotations')
     return parser.parse_args()
 
@@ -34,4 +35,6 @@ if __name__ == "__main__":
 
     u, pvals = mannwhitneyu(low_df, high_df, axis=1)
     result = pd.DataFrame(pvals, index=ts_df.index)
-    result.to_csv(args.output)
+
+    ts_df.to_csv(args.scores_output, sep='\t')
+    result.to_csv(args.testing_output, sep='\t')
