@@ -40,7 +40,7 @@ if __name__ == "__main__":
     high_df_means = high_df.mean(axis=1)
     low_df_means = low_df.mean(axis=1)
     diff = high_df_means-low_df_means
-    signs = np.sign(np.log(ratio))
+    signs = np.sign(diff)
     result['rnk'] = -np.log(result['pval'])*signs
 
     ts_df.to_csv(args.scores_output, sep='\t')
