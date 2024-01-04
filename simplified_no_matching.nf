@@ -46,7 +46,7 @@ process extract_tcga_type {
 
     tag "Extract tcga type: $params.tcga_type"
     publishDir "${output_dir}/${params.tcga_type}/raw_counts", mode:"copy"
-    container "xyonetx/pandas"
+    container "ghcr.io/xyonetx/tcga-pipeline/pandas"
     cpus 4
     memory '8 GB'
 
@@ -70,7 +70,7 @@ process segregate_by_expression {
     tag "Segregate expression on $raw_counts"
     publishDir "${output_dir}/${params.tcga_type}/normalized_counts", mode:"copy", pattern: "*.deseq2_norm_counts.all.tsv"
     publishDir "${output_dir}/${params.tcga_type}/annotations", mode:"copy", pattern: "*annotations*"
-    container "xyonetx/deseq2"
+    container "ghcr.io/xyonetx/tcga-pipeline/deseq2"
     cpus 2
     memory '8 GB'
 
@@ -91,7 +91,6 @@ process segregate_by_expression {
             ${params.gene} \
             ${params.low_q} \
             ${params.high_q} \
-            ${params.continuous_matching_covariates},${params.categorical_matching_covariates},${params.additional_covariates} \
             ${params.tcga_type}.full_curated_annotations.${params.gene}_${params.low_q}_${params.high_q}.tsv \
             ${params.tcga_type}.deseq2_norm_counts.all.tsv
         """
@@ -102,7 +101,7 @@ process run_dge {
 
     tag "Run differential expression on $raw_counts"
     publishDir "${output_dir}/${params.tcga_type}/dge_results", mode:"copy", pattern: "*.deseq2_results*"
-    container "xyonetx/deseq2"
+    container "ghcr.io/xyonetx/tcga-pipeline/deseq2"
     cpus 4
     memory '8 GB'
 
@@ -115,7 +114,7 @@ process run_dge {
 
     script:
         """
-        /opt/software/miniconda/envs/deseq2/bin/Rscript /opt/software/scripts/deseq2.R \
+        /opt/software/miniconda/envs/deseq2/bin/Rscript /opt/software/scripts/deseq2_for_simplified_runs.R \
             ${raw_counts} \
             ${annotations} \
             ${params.tcga_type}.deseq2_results.${params.gene}_${params.low_q}_${params.high_q}.high_vs_low.tsv
@@ -127,7 +126,7 @@ process run_gsea {
 
     tag "Run GSEA on tcga type: $params.tcga_type"
     publishDir "${output_dir}/${params.tcga_type}/gsea", mode:"copy"
-    container "xyonetx/gsea"
+    container "ghcr.io/xyonetx/tcga-pipeline/gsea"
     cpus 4
     memory '8 GB'
 
@@ -193,7 +192,7 @@ process run_gsea_c2 {
 
     tag "Run GSEA on tcga type: $params.tcga_type"
     publishDir "${output_dir}/${params.tcga_type}/gsea_c2", mode:"copy"
-    container "xyonetx/gsea"
+    container "ghcr.io/xyonetx/tcga-pipeline/gsea"
     cpus 4
     memory '8 GB'
 
@@ -260,7 +259,7 @@ process run_gsea_preranked {
 
     tag "Run GSEA Preranked on tcga type: $params.tcga_type"
     publishDir "${output_dir}/${params.tcga_type}/gsea_preranked", mode:"copy"
-    container "xyonetx/gsea"
+    container "ghcr.io/xyonetx/tcga-pipeline/gsea"
     cpus 4
     memory '8 GB'
 
@@ -310,7 +309,7 @@ process map_ensg_to_symbol {
     tag "Run ENSG to symbol gene mapping on $exp_mtx and $dge_results"
     publishDir "${output_dir}/${params.tcga_type}/dge_results", mode:"copy", pattern: "*.deseq2_results*"
     publishDir "${output_dir}/${params.tcga_type}/normalized_counts", mode:"copy", pattern: "*.deseq2_norm_counts.symbol_remapped.*"
-    container "xyonetx/pandas"
+    container "ghcr.io/xyonetx/tcga-pipeline/pandas"
     cpus 2
     memory '4 GB'
 
